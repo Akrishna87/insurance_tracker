@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 and older: back up the user's policies and reminder state. -->
+<full-backup-content>
+    <include domain="file" path="vault.json" />
+</full-backup-content>

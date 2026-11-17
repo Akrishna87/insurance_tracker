@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+: the vault goes to cloud backups and device transfers. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="file" path="vault.json" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="file" path="vault.json" />
+    </device-transfer>
+</data-extraction-rules>
