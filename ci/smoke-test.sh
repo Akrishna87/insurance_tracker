@@ -13,15 +13,20 @@ adb shell am start -n "$pkg/.MainActivity"
 shot() { sleep "${2:-3}"; adb exec-out screencap -p > "$out/$1.png"; }
 crashed() { adb logcat -d | grep -E "FATAL EXCEPTION|AndroidRuntime: .*$pkg" >/dev/null; }
 # Taps the centre of the Nth (default first) view whose text or content description is $1.
+# Matches the label exactly (fixed-string) so names with * or ₹ work.
 tap() {
   adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
-  local xml; xml=$(adb shell cat /sdcard/ui.xml)
-  local b; b=$(echo "$xml" | grep -o "<node[^>]*\(text\|content-desc\)=\"$1\"[^>]*" | sed -n "${2:-1}p" | grep -o 'bounds="[^"]*"' | head -1)
+  local line
+  line=$(adb shell cat /sdcard/ui.xml | sed 's/></>\n</g' | grep -F "text=\"$1\"" | sed -n "${2:-1}p")
+  if [ -z "$line" ]; then
+    line=$(adb shell cat /sdcard/ui.xml | sed 's/></>\n</g' | grep -F "content-desc=\"$1\"" | sed -n "${2:-1}p")
+  fi
+  local b; b=$(echo "$line" | grep -o 'bounds="[^"]*"' | head -1)
   if [ -z "$b" ]; then echo "  (no '$1' on screen)"; return 1; fi
   read -r x1 y1 x2 y2 <<<"$(echo "$b" | grep -o '[0-9]\+' | tr '\n' ' ')"
   adb shell input tap $(((x1 + x2) / 2)) $(((y1 + y2) / 2))
 }
-# Types into the field whose label/placeholder is $1.
+# Types into the field whose label is $1.
 type_into() {
   tap "$1" || return 1
   sleep 1
@@ -41,8 +46,15 @@ tap "Add your first policy" || tap "Add policy" || fail "No add button on the em
 shot 02-add 3
 adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
 adb shell cat /sdcard/ui.xml | grep -q "What kind of policy" || fail "The add form never showed"
-type_into "e.g. Star Health, LIC, HDFC Ergo" "StarHealth" || fail "Could not tap the insurer field"
+type_into "Insurer *" "StarHealth" || fail "Could not tap the insurer field"
 tap "Health" || true
+# Close the keyboard, then scroll the form until the save button is reachable.
+adb shell input keyevent 111
+for _ in 1 2 3 4 5 6 7 8; do
+  tap "Save policy" && break
+  adb shell input swipe 540 1600 540 500 400
+  sleep 1
+done
 tap "Save policy" || fail "No save button"
 sleep 4
 shot 03-saved 1
