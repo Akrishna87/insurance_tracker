@@ -47,15 +47,18 @@ shot 02-add 3
 adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
 adb shell cat /sdcard/ui.xml | grep -q "What kind of policy" || fail "The add form never showed"
 type_into "Insurer *" "StarHealth" || fail "Could not tap the insurer field"
-tap "Health" || true
-# Close the keyboard, then scroll the form until the save button is reachable.
-adb shell input keyevent 111
+shot 02b-typed 1
+# Close the keyboard if it is open (back dismisses the IME before it reaches the app),
+# then scroll the form until the save button is reachable.
+kb_open() { adb shell dumpsys input_method | grep -q "mInputShown=true"; }
+if kb_open; then adb shell input keyevent 4; sleep 1; fi
 for _ in 1 2 3 4 5 6 7 8; do
   tap "Save policy" && break
-  adb shell input swipe 540 1600 540 500 400
+  adb shell input swipe 540 1400 540 500 400
   sleep 1
 done
 tap "Save policy" || fail "No save button"
+shot 02c-bottom 1
 sleep 4
 shot 03-saved 1
 
