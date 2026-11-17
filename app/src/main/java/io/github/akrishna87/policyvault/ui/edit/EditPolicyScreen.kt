@@ -125,6 +125,7 @@ fun EditPolicyScreen(
                     IconButton(onClick = onDone) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
                 },
                 actions = {
+                    TextButton(onClick = { save() }) { Text("Save") }
                     if (initial != null) {
                         TextButton(onClick = {
                             scope.launch {
