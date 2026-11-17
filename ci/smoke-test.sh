@@ -53,26 +53,23 @@ tap "Save" || fail "No save button"
 sleep 4
 shot 03-saved 1
 
-# 3. The saved policy is on the dashboard.
+# 3. The dashboard reflects the saved policy: one active, the type mix, the totals.
 adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
-adb shell cat /sdcard/ui.xml | grep -q "StarHealth" || fail "The saved policy never showed on the dashboard"
 adb shell cat /sdcard/ui.xml | grep -q "Total cover" || fail "The dashboard totals never showed"
+adb shell cat /sdcard/ui.xml | grep -q "1 active" || fail "The saved policy never showed on the dashboard"
+adb shell cat /sdcard/ui.xml | grep -q "1 policy" || fail "The type mix never showed the saved policy"
 
-# 4. Open the detail screen.
-tap "StarHealth"
-sleep 3
-shot 04-detail 1
-adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
-adb shell cat /sdcard/ui.xml | grep -q "Details" || fail "The detail screen never showed"
-
-# 5. The policies tab, with search.
-adb shell input keyevent 4
-sleep 2
+# 4. The policies tab lists it; open the detail screen from there.
 tap "Policies"
 sleep 2
-shot 05-list 1
+shot 04-list 1
 adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
 adb shell cat /sdcard/ui.xml | grep -q "StarHealth" || fail "The policies list never showed the policy"
+tap "StarHealth"
+sleep 3
+shot 05-detail 1
+adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
+adb shell cat /sdcard/ui.xml | grep -q "Details" || fail "The detail screen never showed"
 
 crashed && fail "The app crashed during the walkthrough"
 echo "=== Smoke test passed ==="
